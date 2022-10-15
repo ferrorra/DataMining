@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Data Mining Project Part 1</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="styleSheet">
+        <string notr="true">QTabWidget::pane {
+  border: 1px solid rgb(43, 93, 147);
+  top:-1px; 
+  background: white;
+} 
+
+QTabBar::tab {
+  background: rgb(255, 217, 86); 
+  decoration:none;
+  border: 5px dashed rgb(255, 217, 86); 
+  padding: 15px;
+  color:rgb(43, 93, 147);
+} 
+
+QTabBar::tab:selected { 
+  background: rgb(255, 217, 86); 
+  margin-bottom: -1px; 
+}
+QLabel{
+	color:rgb(252, 55, 49);
+font: 87 28pt &quot;Aileron Heavy&quot;;
+padding:10px;
+}
+
+</string>
+       </property>
+       <property name="tabShape">
+        <enum>QTabWidget::Triangular</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <property name="documentMode">
+        <bool>false</bool>
+       </property>
+       <property name="tabsClosable">
+        <bool>false</bool>
+       </property>
+       <property name="movable">
+        <bool>true</bool>
+       </property>
+       <property name="tabBarAutoHide">
+        <bool>false</bool>
+       </property>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Manipulation de dataset</string>
+        </attribute>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QTabWidget" name="tabWidget_2">
+             <property name="styleSheet">
+              <string notr="true">pane {
+  border: 1px solid rgb(43, 93, 147);
+  top:-1px; 
+  background: white;
+} 
+
+tab {
+  background: black; 
+  decoration:none;
+  border: 5px dashed black; 
+  padding: 15px;
+  color:rgb(43, 93, 147);
+} 
+
+tab:selected { 
+  background: rgb(170, 170, 255); 
+  margin-bottom: -1px; 
+}</string>
+             </property>
+             <property name="tabPosition">
+              <enum>QTabWidget::East</enum>
+             </property>
+             <property name="tabShape">
+              <enum>QTabWidget::Triangular</enum>
+             </property>
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <property name="elideMode">
+              <enum>Qt::ElideLeft</enum>
+             </property>
+             <property name="movable">
+              <bool>true</bool>
+             </property>
+             <property name="tabBarAutoHide">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="tab_5">
+              <attribute name="title">
+               <string>Visualisation du contenu</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_2">
+               <item>
+                <widget class="QLabel" name="label">
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string>Visualisation du contenu de notre dataset</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout">
+                 <item>
+                  <widget class="QTableView" name="tableView"/>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_7">
+              <attribute name="title">
+               <string>Description Globale</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_4">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_3">
+                 <item>
+                  <widget class="QLabel" name="label_2">
+                   <property name="text">
+                    <string>Description globale de notre dataset</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QTableView" name="tableView_2"/>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_8">
+              <attribute name="title">
+               <string>Description attributs</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_5">
+                 <item>
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>Description des attributs</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QFormLayout" name="formLayout">
+                   <property name="rowWrapPolicy">
+                    <enum>QFormLayout::DontWrapRows</enum>
+                   </property>
+                   <property name="formAlignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                   <item row="1" column="0">
+                    <widget class="QTableView" name="tableView_3">
+                     <property name="minimumSize">
+                      <size>
+                       <width>500</width>
+                       <height>200</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QComboBox" name="comboBox">
+                     <property name="maximumSize">
+                      <size>
+                       <width>300</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QLabel" name="label_5">
+                     <property name="maximumSize">
+                      <size>
+                       <width>350</width>
+                       <height>200</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">border-image: url(:/images/resources/growth-chart (1).png);</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="label_21">
+                     <property name="minimumSize">
+                      <size>
+                       <width>150</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">border-image: url(:/images/resources/growth-graph.png);</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLabel" name="label_22">
+                     <property name="maximumSize">
+                      <size>
+                       <width>150</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">border-image: url(:/images/resources/money-growth.png);</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_9">
+              <attribute name="title">
+               <string>Mise à Jour</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_7">
+                 <item>
+                  <widget class="QLabel" name="label_4">
+                   <property name="text">
+                    <string>Mise à jour des attributs</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_5">
+                   <item>
+                    <widget class="QLabel" name="label_6">
+                     <property name="maximumSize">
+                      <size>
+                       <width>300</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                     </property>
+                     <property name="text">
+                      <string>Chercher</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QTextEdit" name="textEdit">
+                     <property name="maximumSize">
+                      <size>
+                       <width>500</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:rgb(43, 93, 147);
+font: 20pt &quot;Roboto&quot;;
+</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="comboBox_2">
+                     <property name="maximumSize">
+                      <size>
+                       <width>200</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="QTableView" name="tableView_4">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>500</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton">
+                   <property name="styleSheet">
+                    <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;
+border: 2px solid rgb(252, 55, 49);
+border-radius:20px;</string>
+                   </property>
+                   <property name="text">
+                    <string>Modifier</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_2">
+        <attribute name="title">
+         <string>Analyse des caractéristiques</string>
+        </attribute>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QTabWidget" name="tabWidget_3">
+             <property name="tabPosition">
+              <enum>QTabWidget::East</enum>
+             </property>
+             <property name="tabShape">
+              <enum>QTabWidget::Triangular</enum>
+             </property>
+             <property name="currentIndex">
+              <number>3</number>
+             </property>
+             <widget class="QWidget" name="tab_6">
+              <attribute name="title">
+               <string>Tendances centrales et symétries</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_10">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_9">
+                 <item>
+                  <widget class="QLabel" name="label_7">
+                   <property name="text">
+                    <string>Mesures de tendances centrales et asymétrie</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_6">
+                   <item>
+                    <widget class="QLabel" name="label_8">
+                     <property name="maximumSize">
+                      <size>
+                       <width>300</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                     </property>
+                     <property name="text">
+                      <string>Chercher attribut</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="comboBox_3">
+                     <property name="maximumSize">
+                      <size>
+                       <width>300</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_9">
+                     <property name="maximumSize">
+                      <size>
+                       <width>90</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">border-image: url(:/images/resources/circle-chart.png);</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QTableView" name="tableView_5">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>500</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_11">
+              <attribute name="title">
+               <string>Dispersion et Outliers</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_12">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_11">
+                 <item>
+                  <widget class="QLabel" name="label_10">
+                   <property name="text">
+                    <string>Mesures de dispersion et données abberantes</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <item>
+                    <widget class="QLabel" name="label_11">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                     </property>
+                     <property name="text">
+                      <string>Chercher attribut</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="comboBox_4">
+                     <property name="maximumSize">
+                      <size>
+                       <width>300</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_12">
+                     <property name="maximumSize">
+                      <size>
+                       <width>150</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">border-image: url(:/images/resources/network-chart.png);</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QTableView" name="tableView_6"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_12">
+              <attribute name="title">
+               <string>Boite à Moustaches</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_14">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <item>
+                  <widget class="QLabel" name="label_13">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>100</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Boite à moustaches et données abberantes</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_8">
+                   <item>
+                    <widget class="QLabel" name="label_14">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                     </property>
+                     <property name="text">
+                      <string>Choisir attribut</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="comboBox_5">
+                     <property name="minimumSize">
+                      <size>
+                       <width>200</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>500</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_10">
+              <attribute name="title">
+               <string>Histogramme</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_16">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_15">
+                 <item>
+                  <widget class="QLabel" name="label_15">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>100</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Histogramme et distribution de données</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_9">
+                   <item>
+                    <widget class="QLabel" name="label_16">
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>50</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                     </property>
+                     <property name="text">
+                      <string>Choisir attribut</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="comboBox_6">
+                     <property name="minimumSize">
+                      <size>
+                       <width>200</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>500</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_13">
+        <attribute name="title">
+         <string>Visualisation</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_18">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_17">
+           <item>
+            <widget class="QLabel" name="label_17">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Diagrammes de dispersion des données et corrélations entre les attributs</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <item>
+              <widget class="QLabel" name="label_18">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+               </property>
+               <property name="text">
+                <string>Choisir les attributs</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_19">
+               <item>
+                <widget class="QLabel" name="label_19">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>50</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                 </property>
+                 <property name="text">
+                  <string>Axes X</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="comboBox_7">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>300</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_20">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_21">
+                 <item>
+                  <widget class="QLabel" name="label_20">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>50</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">color:rgb(252, 55, 49);
+font: 87 15pt &quot;Aileron Heavy&quot;;
+padding:10px;</string>
+                   </property>
+                   <property name="text">
+                    <string>Axes Y</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="comboBox_8">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>300</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
+ <connections/>
+</ui>
