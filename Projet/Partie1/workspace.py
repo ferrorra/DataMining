@@ -693,12 +693,11 @@ class Ui_Form(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_13), _translate("Form", "Visualisation"))
 
                 
-        
 
 
         self.tabWidget.currentChanged.connect(lambda: self.visualiser_dataset(self.tableView)) 
         self.tabWidget.currentChanged.connect(lambda: self.attributs(self.tableView_3))
-        self.tabWidget_1.currentChanged.connect(lambda: self.attributs(self.tableView_3))
+        self.tabWidget_2.currentChanged.connect(lambda: self.attributs(self.tableView_3))
 
         self.tabWidget.currentChanged.connect(lambda: self.tendances(self.tableView_5)) 
         self.tabWidget.currentChanged.connect(lambda: self.mesures(self.tableView_6))
