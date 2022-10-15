@@ -160,7 +160,7 @@ class Ui_Form(object):
         dff=pd.DataFrame(colonnes_description, columns = ["Nom","Valeurs non null","Type"])
         model = pandasModel(dff)
         view.setModel(model)
-        view.resize(1000, 500)
+        view.resize(500, 200)
         view.show()
 
     def load_combo(self, combo):
@@ -212,8 +212,9 @@ class Ui_Form(object):
     def visualiser_dataset(self,view):
         df = self.DF
         model = pandasModel(df)
+        view.setModel(None)
         view.setModel(model)
-        view.resize(600, 500)
+        view.resize(1000, 700)
         view.show()
 
     def mesures(self, view):
@@ -430,15 +431,6 @@ class Ui_Form(object):
         self.tableView_4.setStyleSheet("")
         self.tableView_4.setObjectName("tableView_4")
         self.verticalLayout_7.addWidget(self.tableView_4)
-        self.pushButton = QtWidgets.QPushButton(self.tab_9)
-        self.pushButton.setStyleSheet("color:rgb(252, 55, 49);\n"
-"font: 87 15pt \"Aileron Heavy\";\n"
-"padding:10px;\n"
-"border: 2px solid rgb(252, 55, 49);\n"
-"border-radius:20px;")
-        self.pushButton.setObjectName("pushButton")
-        #self.pushButton.clicked.connect(self.modifier)
-        self.verticalLayout_7.addWidget(self.pushButton)
         self.verticalLayout_8.addLayout(self.verticalLayout_7)
         self.tabWidget_2.addTab(self.tab_9, "")
         self.horizontalLayout.addWidget(self.tabWidget_2)
@@ -679,7 +671,6 @@ class Ui_Form(object):
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_8), _translate("Form", "Attributs"))
         self.label_4.setText(_translate("Form", "Mise à jour des attributs"))
         self.label_6.setText(_translate("Form", "Scroller"))
-        self.pushButton.setText(_translate("Form", "Modifier"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_9), _translate("Form", "MAJ"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "Manipulation de dataset"))
         self.label_7.setText(_translate("Form", "Mesures de tendances centrales et asymétrie"))
@@ -701,6 +692,16 @@ class Ui_Form(object):
         self.label_20.setText(_translate("Form", "Axes Y"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_13), _translate("Form", "Visualisation"))
 
+                
+        
+
+
+        self.tabWidget.currentChanged.connect(lambda: self.visualiser_dataset(self.tableView)) 
+        self.tabWidget.currentChanged.connect(lambda: self.attributs(self.tableView_3))
+        self.tabWidget_1.currentChanged.connect(lambda: self.attributs(self.tableView_3))
+
+        self.tabWidget.currentChanged.connect(lambda: self.tendances(self.tableView_5)) 
+        self.tabWidget.currentChanged.connect(lambda: self.mesures(self.tableView_6))
 
         self.comboBox_7.activated.connect(lambda: self.plottingScatter(self.tab_13,self.verticalLayout_17,"Scatter", self.comboBox_7.currentText(),self.comboBox_8.currentText()))
         self.comboBox_8.activated.connect(lambda: self.plottingScatter(self.tab_13,self.verticalLayout_17,"Scatter", self.comboBox_7.currentText(),self.comboBox_8.currentText())) 
@@ -814,6 +815,8 @@ class pandasModel(QAbstractTableModel):
         return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
 
     def setData(self, index, value, role):
+        if value=="":
+                value = np.nan
         if role == Qt.EditRole:
             # Set the value into the frame.
             self._data.iloc[index.row(), index.column()] = value            
