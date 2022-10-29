@@ -3,6 +3,7 @@ from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import QTreeWidgetItem
 import sys, res
 import pandas as pd
+pd.options.mode.chained_assignment = None
 import numpy as np
 from PyQt5.QtCore import Qt, QItemSelectionModel, QSortFilterProxyModel
 from pandas.api.types import is_numeric_dtype
@@ -19,7 +20,7 @@ import math
 from pandas.api.types import is_numeric_dtype
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
-
+from matplotlib.colors import ListedColormap
 
 
 
@@ -30,9 +31,30 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     app = QApplication([])
     DF =pd.read_excel("Dataset1_ HR-EmployeeAttrition.xlsx")
-    moustaches,scat,histo = QWidget(),QWidget(),QWidget()
+    DFORIGINAL = pd.read_excel("Dataset1_ HR-EmployeeAttrition.xlsx")
 
-    
+    binning, moustaches,scat,histo = QWidget(),QWidget(),QWidget(),QWidget()
+
+    def normalizer(self, combo):
+        numeric = self.DF.select_dtypes(include=['number'])
+        if combo.currentText()=="MinMax":
+            min_max_df = numeric
+            self.dataset_minmax(min_max_df)
+            self.DF=min_max_df
+        else:
+            z_score_df = numeric
+            self.zscores_dataset(z_score_df)
+            self.DF = z_score_df
+        self.visualiser_dataset(self.listView_3)   
+            
+    def dataset_minmax(self,dataset):
+        for d in dataset.columns:
+            cols = dataset[d].to_numpy()
+            mini = min(cols)
+            maxi = max(cols)
+            dataset[d] = ((dataset[d] - mini) / (maxi - mini))*(1-0)+0
+            
+  
     def outlierss(self,df):
         mesures_de_dispersion = {}
         for d in df:
@@ -64,28 +86,146 @@ class Ui_Form(object):
         dfff =self.outlierss(self.DF)
         dicto = dict(dfff['Donnees aberanttes'][dfff['Donnees aberanttes'] != 'Aucune'])
         outliers = pd.DataFrame.from_dict(dicto, orient='index')
-
+        print(outliers.head())
         for d in outliers.index:
-            df5[d][df5[d].isin(outliers.loc[d].values)] = np.full(shape=len(df5[d][df5[d].isin(outliers.loc[d].values)]), fill_value= tendance(self.DF,d), dtype=np.float)
+            keys = outliers.loc[d].values
+            t = tendance(self.DF,d)
+            for k in keys:
+                df5[d][df5[d]==k] = t
+                
+    def features(self, combo):
+        df = pd.read_excel("Dataset1_ HR-EmployeeAttrition.xlsx")
+
+        feats, featss =[],[]
+        numeric = df.select_dtypes(include=['number'])
+        categorical = df.select_dtypes(include=['object'])
+        newdf= pd.DataFrame(df['Attrition'])
+        if combo.currentText()=="Horrizontale":
+            df.drop_duplicates(keep='first', inplace=True)
+            newdf=df
+        else:
+            #on commence par les attributs qui ont une seule valeur
+            for d in df.columns:
+                if len(df[d].unique())==1:
+                    df.drop(d, inplace=True, axis = 1)
+            
+            feats =self.chi2_feature_selection_scratch(categorical,detail=False)
+
+            
+            X = pd.get_dummies(data=df['Attrition'], drop_first=True) #1==yes
+            X = X.rename({'Yes':'Attrition'}, axis=1)
+            numeric['Attrition'] = X.squeeze()
+            featss=self.pbc_scratch(numeric)
+            
+            for k,v in feats:
+                if v>50:
+                    newdf[k] =df[k]   
+
+            for kk,vv in featss:
+                if abs(vv)>0.1:
+                    newdf[kk] =df[kk] 
+                
+        self.DF=newdf
+        self.visualiser_dataset(self.listView_2)
+
+    def pbc_scratch(self,data):
+        featss =[]
+
+        for d in data.columns[:-2]:
+            bd_unique = data['Attrition'].unique()
+
+            g0 = data[data['Attrition'] == bd_unique[0]][d]
+            g1 = data[data['Attrition'] == bd_unique[1]][d]
+
+            s_y = np.std(data[d])
+            n = len(data['Attrition'])
+            n0 = len(g0)
+            n1 = len(g1)
+            m0 = g0.mean()
+            m1 = g1.mean()
+
+            featss.append((d,(m0-m1)*math.sqrt((n0*n1)/n**2)/s_y))
+        return featss
+
+                
+    def chi2_feature_selection_scratch(self,df, detail):    
+        feat = []
+        for d in df.columns[2:]:
+            #---create the contingency table---
+            df_cont = pd.crosstab(index = df['Attrition'], columns = df[d])
+
+            if detail:
+                print('---Contingency table (T)---')
+                display(df_cont)
+
+
+            #---calculate degree of freedom---(dof)
+            degree_f = (df_cont.shape[0]-1) * (df_cont.shape[1]-1)
+
+            #---sum up the totals for row and columns---
+            df_cont.loc[:,'Total']= df_cont.sum(axis=1)
+            df_cont.loc['Total']= df_cont.sum()
+
+            if detail:   
+                print('---Observed (O)---') 
+                display(df_cont)
+
+
+
+            #---create the expected value dataframe---
+            df_exp = df_cont.copy()    
+            df_exp.iloc[:,:] = np.multiply.outer(df_cont.sum(1).values,df_cont.sum().values) / df_cont.sum().sum()            
+
+            if detail:   
+                print('---Expected (E)---') 
+                display(df_exp)
+
+
+            # calculate chi-square values
+            df_chi2 = ((df_cont - df_exp)**2) / df_exp    
+            df_chi2.loc[:,'Total']= df_chi2.sum(axis=1)
+            df_chi2.loc['Total']= df_chi2.sum()
+
+            if detail:   
+                print('---Chi-Square---') 
+                display(df_chi2)
+
+            df_chi2_yates = ((np.abs(df_cont - df_exp)-0.5)**2) / df_exp    
+            df_chi2_yates.loc[:,'Total']= df_chi2_yates.sum(axis=1)
+            df_chi2_yates.loc['Total']= df_chi2_yates.sum()
+
+            if detail:   
+                print('---Chi-Square---') 
+                display(df_chi2_yates)
+
+
+            #---get chi-square score---   
+            chi_square_score = df_chi2.iloc[:-1,:-1].sum().sum()
+
+
+            feat.append((d,chi_square_score))
+        return feat
         
-        self.DF
+        
     def traiter_val(self,combo1,combo2):
         df = self.DF
+
         if combo1.currentText() =='Valeurs manquantes':
             if combo2.currentText() =='Moyenne':
                 for d in df.columns:
                     if is_numeric_dtype(df[d]):
                         df[d].replace(np.nan, self.moyenne(self.DF,d), inplace=True) 
-                
             elif combo2.currentText() =='Mediane':
                 for d in df.columns:
                     if is_numeric_dtype(df[d]):
                         df[d].replace(np.nan, self.median(self.DF,d), inplace=True)
-
             elif combo2.currentText() =='Mode':
                 for d in df.columns:
                     if is_numeric_dtype(df[d]):
-                        df[d].replace(np.nan, self.mode(self.DF,d), inplace=True)
+                        if(isinstance(self.mode(self.DF,d),list)):
+                            df[d].replace(np.nan, self.mode(self.DF,d)[0], inplace=True)
+                        else:
+                            df[d].replace(np.nan, self.mode(self.DF,d), inplace=True)
 
             elif combo2.currentText() =='Substitution':
                 for d in df.columns:
@@ -94,11 +234,10 @@ class Ui_Form(object):
                     
             elif combo2.currentText() =='Regression lineaire':
                 for d in df.columns:
-                    if is_numeric_dtype(df[d]) and df["MonthlyIncome"][df["MonthlyIncome"].isnull()]:
-                        df["MonthlyIncome"][df["MonthlyIncome"].isnull()] = self.regression_lineaire(df)
-            elif combo2.currentText() =='Regression logistique':
-                for d in df.columns:
-                    df["EnvironmentSatisfaction"][df["EnvironmentSatisfaction"].isnull()] = self.regression_logistique(df)
+                    if is_numeric_dtype(df[d]) and not df[d][df[d].isnull()].empty:
+                        df[d][df[d].isnull()] = self.regression_lineaire(df,d)
+            else:
+                pass
         elif combo1.currentText() =='Valeurs aberrantes':    
             if combo2.currentText() =='Moyenne':
                 self.treat_outlier(self.moyenne,df)
@@ -106,6 +245,8 @@ class Ui_Form(object):
                 self.treat_outlier(self.median,df)
             elif combo2.currentText() =='Mode':
                 self.treat_outlier(self.mode,df)
+            else:
+                pass
         else:
             pass
         df.to_excel('Dataset1_ HR-EmployeeAttrition.xlsx', index =False)
@@ -120,46 +261,54 @@ class Ui_Form(object):
         testdf = df3[df3[d].isnull()==True] #the missing values we should be predicting
         traindf = df3[df3[d].isnull()==False]
         y = traindf[d]
-        traindf.drop("d",axis=1,inplace=True) #take off the values to be predicted
-        testdf.drop("d",axis=1,inplace=True) #take off the values to be predicted
+        traindf.drop(d,axis=1,inplace=True) #take off the values to be predicted
+        testdf.drop(d,axis=1,inplace=True) #take off the values to be predicted
         lr = LinearRegression()
         lr.fit(traindf, y)
         lrpred = lr.predict(testdf)
         return lrpred
 
-    def regression_logistique(slef,df4,d):
-        corrl = df4.corr()
-        cor_tarl = abs(corrl[d])
-        relevant_featuresl = cor_tarl[cor_tarl>0.04]
-        df4 = df4[relevant_featuresl.index]
-        testdfl = df4[df4[d].isnull()==True] #the missing values we should be predicting
-        traindfl = df4[df4[d].isnull()==False]
-        yl = traindfl[d]
-        traindfl.drop(d,axis=1,inplace=True)
-        testdfl.drop(d,axis=1,inplace=True)
-        lrl = LogisticRegression()
-        lrl.fit(traindfl, yl)
-        lrpredl = lrl.predict(testdfl)
-        return lrpredl
 
 
-    def load_methodes(self,combo, propositions):
+
+    def load_methodes(self,combo, propositions, ats):
         methodes=[]
         if combo.currentText() =='Valeurs manquantes':
-            methodes = ['Moyenne','Mediane','Mode', 'Substitution', 'Regression lineaire', 'Regression logistique']
+            methodes = ['','Moyenne','Mediane','Mode', 'Substitution', 'Regression lineaire']
             propositions.clear()
             propositions.addItems(methodes)
+            ats.clear()
+            ats.addItem('')
+            ats.addItems(self.DF.columns)
         else:
-            methodes = ['Moyenne','Mediane','Mode']
+            methodes = ['','Moyenne','Mediane','Mode']
             propositions.clear()
             propositions.addItems(methodes)  
+            ats.clear()
+            ats.addItem('')
+            dfff =self.outlierss(self.DF)
+            dicto = dict(dfff['Donnees aberanttes'][dfff['Donnees aberanttes'] != 'Aucune'])
+            outliers = pd.DataFrame.from_dict(dicto, orient='index')
+            for d in outliers.index:
+                if is_numeric_dtype(self.DF[d]):
+                    ats.addItem(d)
+
+    def load_dsc(self,combo,ats):
+                atss = ['Age', 'DailyRate', 'DistanceFromHome', 'EmployeeNumber', 'HourlyRate',
+           'MonthlyIncome', 'MonthlyRate', 'NumCompaniesWorked',
+           'PercentSalaryHike', 'TotalWorkingYears', 'TrainingTimesLastYear',
+           'WorkLifeBalance', 'YearsAtCompany', 'YearsInCurrentRole',
+           'YearsSinceLastPromotion', 'YearsWithCurrManager']
+                ats.clear()
+                ats.addItem('')
+                ats.addItems(atss)                
+
 
     def plottingMoustaches(self,tab,verticalLayout,plot="",combo1="",combo2=""):
         verticalLayout.removeWidget(self.moustaches)
         # creating a window object
         self.moustaches = Window(tab)
-        self.moustaches.setMinimumSize(QtCore.QSize(800, 500))
-        self.moustaches.setMaximumSize(QtCore.QSize(800, 500))
+        self.moustaches.setMinimumSize(QtCore.QSize(400, 250))
         self.moustaches.setObjectName("Plot")
 
         self.moustaches.button.clicked.connect(lambda: self.moustaches.Moustaches(combo1))
@@ -167,6 +316,34 @@ class Ui_Form(object):
         verticalLayout.addWidget(self.moustaches)
         # showing the window
         self.moustaches.show()
+        
+    def plotting_bins(self,tab,verticalLayout,combo1="",combo2=""):
+        #verticalLayout.removeWidget(self.binning)
+        # creating a window object
+        self.bining = Window()
+        #self.bining.setMaximumSize(QtCore.QSize(800, 500))
+        self.bining.setMinimumSize(QtCore.QSize(600, 450))
+        self.bining.setObjectName("Plot")
+
+        self.bining.button.clicked.connect(lambda: self.bining.Bin(combo1,combo2))
+
+        #verticalLayout.addWidget(self.bining)
+        # showing the window
+        self.bining.show()
+        
+    def compare_outliers(self,combo1=""):
+            # creating a window object
+            self.moustaches = Window()
+
+            self.moustaches.setObjectName("Plot")
+            if self.comboBox_11.currentText()=="Valeurs aberrantes":
+                self.moustaches.button.clicked.connect(lambda: self.moustaches.draw_outliers(combo1,self.DFORIGINAL,self.DF))
+            else:
+                self.moustaches.button.clicked.connect(lambda: self.moustaches.draw_valmanquantes(combo1,self.DFORIGINAL,self.DF))
+
+
+            # showing the window
+            self.moustaches.show()
 
     def plottingHist(self,tab,verticalLayout,plot="",combo1="",combo2=""):
         verticalLayout.removeWidget(self.histo)
@@ -182,7 +359,13 @@ class Ui_Form(object):
         verticalLayout.addWidget(self.histo)
         # showing the window
         self.histo.show()
+        
+        
 
+        
+
+
+      
     def plottingScatter(self,tab,verticalLayout,plot="",combo1="",combo2=""):
         verticalLayout.removeWidget(self.scat)
         # creating a window object
@@ -228,7 +411,6 @@ class Ui_Form(object):
         newItem = []
         newItem = treeWidget.findItems(text.currentText(),Qt.MatchRegularExpression, 0)
         treeWidget.scrollToItem(newItem[0])        
-        print(newItem[0])
         treeWidget.setCurrentItem(newItem[0])    
 
     def find(self, text, table, column=0 ):
@@ -283,7 +465,17 @@ class Ui_Form(object):
         view.setModel(model)
         view.resize(500, 200)
         view.show()
-
+        
+    def zscores_dataset(self,dataset):
+        for d in dataset.columns:
+            mean = sum(dataset[d]) / len(dataset[d])
+            differences = [(value - mean)**2 for value in dataset[d]]
+            sum_of_differences = sum(differences)
+            standard_deviation = (sum_of_differences / (len(dataset[d]) - 1)) ** 0.5
+            zscores = [(value - mean) / standard_deviation for value in dataset[d]]
+            dataset[d] =zscores
+        
+        
     def load_combo(self, combo):
         df = self.DF
         items = df.columns
@@ -414,6 +606,9 @@ class Ui_Form(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.tabWidget_2 = QtWidgets.QTabWidget(self.tab)
+        
+
+
 
         self.tabWidget_2.setTabBar(TabBar1(self.tabWidget_2))
         self.tabWidget_2.setStyleSheet("QTabWidget::pane {\n"
@@ -634,7 +829,7 @@ class Ui_Form(object):
 
         self.tableView_5.setMinimumSize(QtCore.QSize(0, 500))
         self.tableView_5.setObjectName("tableView_5")
-        self.tableView_5 = QtWidgets.QTreeWidget(self.tab_6)
+        
 
         self.verticalLayout_10.addWidget(self.tableView_5)
         self.tabWidget_3.addTab(self.tab_6, "")
@@ -743,6 +938,7 @@ class Ui_Form(object):
         self.verticalLayout_17.addWidget(self.label_17)
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
+        
         self.label_18 = QtWidgets.QLabel(self.tab_13)
         self.label_18.setMaximumSize(QtCore.QSize(16777215, 50))
         self.label_18.setStyleSheet("color:rgb(252, 55, 49);\n"
@@ -784,6 +980,7 @@ class Ui_Form(object):
         self.verticalLayout_20.addLayout(self.verticalLayout_21)
         self.horizontalLayout_10.addLayout(self.verticalLayout_20)
         self.verticalLayout_17.addLayout(self.horizontalLayout_10)
+
         self.verticalLayout_18.addLayout(self.verticalLayout_17)
         self.tabWidget.addTab(self.tab_13, "")
         self.tab_3 = QtWidgets.QWidget()
@@ -819,6 +1016,26 @@ class Ui_Form(object):
         self.comboBox_12 = QtWidgets.QComboBox(self.tab_14)
         self.comboBox_12.setGeometry(QtCore.QRect(110, 280, 321, 22))
         self.comboBox_12.setObjectName("comboBox_12")
+        self.comboBox_12.addItem("")
+        self.comboBox_12.addItem("")
+        self.comboBox_12.addItem("")
+        self.comboBox_12.addItem("")
+        self.comboBox_12.addItem("")
+        self.comboBox_12.addItem("")
+        
+        self.comboBox_122 = QtWidgets.QComboBox(self.tab_14)
+        self.comboBox_122.setGeometry(QtCore.QRect(110, 350, 321, 22))
+        self.comboBox_122.setObjectName("comboBox_122")
+        self.comboBox_122.addItem("")
+        self.comboBox_122.addItem("")
+        self.comboBox_122.addItem("")
+        self.comboBox_122.addItem("")
+        self.comboBox_122.addItem("")
+        self.comboBox_122.addItem("")
+
+
+        self.comboBox_122.activated.connect(lambda: self.compare_outliers(self.comboBox_122.currentText()))
+
         self.listView = QtWidgets.QTableView(self.tab_14)
         self.listView.setGeometry(QtCore.QRect(640, 130, 301, 361))
         self.listView.setObjectName("listView")
@@ -831,6 +1048,7 @@ class Ui_Form(object):
         self.comboBox_11.setObjectName("comboBox_11")
         self.comboBox_11.addItem("")
         self.comboBox_11.addItem("")
+        self.comboBox_11.addItem("")
 
         self.tabWidget_4.addTab(self.tab_14, "")
         self.tab_15 = QtWidgets.QWidget()
@@ -838,10 +1056,7 @@ class Ui_Form(object):
         self.label_24 = QtWidgets.QLabel(self.tab_15)
         self.label_24.setGeometry(QtCore.QRect(340, 10, 491, 81))
         self.label_24.setObjectName("label_24")
-        self.comboBox_13 = QtWidgets.QComboBox(self.tab_15)
-        self.comboBox_13.setEnabled(False)
-        self.comboBox_13.setGeometry(QtCore.QRect(580, 180, 391, 22))
-        self.comboBox_13.setObjectName("comboBox_13")
+
         self.label_31 = QtWidgets.QLabel(self.tab_15)
         self.label_31.setGeometry(QtCore.QRect(640, 100, 271, 81))
         self.label_31.setObjectName("label_31")
@@ -853,6 +1068,10 @@ class Ui_Form(object):
         self.comboBox_14.setObjectName("comboBox_14")
         self.comboBox_14.addItem("")
         self.comboBox_14.addItem("")
+        self.comboBox_14.addItem("")
+        
+
+
         self.tabWidget_4.addTab(self.tab_15, "")
         self.tab_16 = QtWidgets.QWidget()
         self.tab_16.setObjectName("tab_16")
@@ -870,10 +1089,8 @@ class Ui_Form(object):
         self.listView_2 = QtWidgets.QTableView(self.tab_16)
         self.listView_2.setGeometry(QtCore.QRect(410, 230, 256, 192))
         self.listView_2.setObjectName("listView_2")
-        self.listView_2.setMaximumSize(QtCore.QSize(300, 200))
-        self.pushButton_4 = QtWidgets.QPushButton(self.tab_16)
-        self.pushButton_4.setGeometry(QtCore.QRect(500, 450, 75, 24))
-        self.pushButton_4.setObjectName("pushButton_4")
+        self.listView_2.setMinimumSize(QtCore.QSize(600, 400))
+        self.listView_2.setMaximumSize(QtCore.QSize(600, 400))
         self.tabWidget_4.addTab(self.tab_16, "")
         self.tab_17 = QtWidgets.QWidget()
         self.tab_17.setObjectName("tab_17")
@@ -885,9 +1102,7 @@ class Ui_Form(object):
         self.comboBox_16.setObjectName("comboBox_16")
         self.comboBox_16.addItem("")
         self.comboBox_16.addItem("")
-        self.pushButton_2 = QtWidgets.QPushButton(self.tab_17)
-        self.pushButton_2.setGeometry(QtCore.QRect(540, 240, 75, 24))
-        self.pushButton_2.setObjectName("pushButton_2")
+        self.comboBox_16.addItem("")
         self.label_27 = QtWidgets.QLabel(self.tab_17)
         self.label_27.setGeometry(QtCore.QRect(390, 300, 381, 61))
         self.label_27.setText("")
@@ -899,10 +1114,22 @@ class Ui_Form(object):
         self.tabWidget.addTab(self.tab_3, "")
         self.gridLayout_2.addWidget(self.tabWidget, 0, 0, 1, 1)
         self.gridLayout_3.addLayout(self.gridLayout_2, 0, 0, 1, 1)
+        self.comboBox_13 = QtWidgets.QComboBox(self.tab_15)
+        self.comboBox_13.setGeometry(QtCore.QRect(580, 180, 391, 22))
+        self.comboBox_13.setObjectName("comboBox_13")
+        self.comboBox_13.addItem("")
+        self.comboBox_13.addItem("")
+        self.comboBox_13.addItem("")
+        self.comboBox_13.addItem("")
+        self.comboBox_13.addItem("")
+        self.comboBox_13.addItem("")
         self.textEdit.textChanged.connect(lambda: self.lookup(self.comboBox_2, self.textEdit.toPlainText(), self.tableView_4))   
-        self.comboBox_11.activated.connect(lambda : self.load_methodes(self.comboBox_11,self.comboBox_12))
+        self.comboBox_11.activated.connect(lambda : self.load_methodes(self.comboBox_11,self.comboBox_12,self.comboBox_122))
         self.comboBox_11.activated.connect(lambda : self.traiter_val(self.comboBox_11,self.comboBox_12))
         self.comboBox_12.activated.connect(lambda : self.traiter_val(self.comboBox_11,self.comboBox_12))
+        self.comboBox_14.activated.connect(lambda : self.load_dsc(self.comboBox_14,self.comboBox_13))
+        self.comboBox_16.activated.connect(lambda : self.normalizer(self.comboBox_16))
+
         self.retranslateUi(Form)
         self.tabWidget.setCurrentIndex(3)
         self.tabWidget_2.setCurrentIndex(2)
@@ -949,26 +1176,33 @@ class Ui_Form(object):
         self.label_24.setText(_translate("Form", "Discrétisation"))
         self.label_31.setText(_translate("Form", "Choisir attribut"))
         self.label_32.setText(_translate("Form", "Choisir classe"))
-        self.comboBox_14.setItemText(0, _translate("Form", "effectifs égaux"))
-        self.comboBox_14.setItemText(1, _translate("Form", "amplitude égale"))
+        self.comboBox_14.setItemText(0, _translate("Form", ""))
+        self.comboBox_14.setItemText(1, _translate("Form", "Effectifs égaux"))
+        self.comboBox_14.setItemText(2, _translate("Form", "Amplitudes égales"))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_15), _translate("Form", "Réduction des données"))
         self.label_25.setText(_translate("Form", "Réduction des données verticale et horrizontale"))
         self.label_33.setText(_translate("Form", "Choisir méthode"))
         self.comboBox_15.setItemText(0, _translate("Form", "Horrizontale"))
         self.comboBox_15.setItemText(1, _translate("Form", "Verticale"))
-        self.pushButton_4.setText(_translate("Form", "Réduction"))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_16), _translate("Form", "Réduction de données"))
         self.label_34.setText(_translate("Form", "Choisir méthode"))
-        self.comboBox_16.setItemText(0, _translate("Form", "MinMax"))
-        self.comboBox_16.setItemText(1, _translate("Form", "Zscore"))
-        self.pushButton_2.setText(_translate("Form", "Normaliser"))
+        self.comboBox_16.setItemText(0, _translate("Form", ""))
+        self.comboBox_16.setItemText(1, _translate("Form", "MinMax"))
+        self.comboBox_16.setItemText(2, _translate("Form", "Zscore"))
         self.label_26.setText(_translate("Form", "Normalisation"))
         self.tabWidget_4.setTabText(self.tabWidget_4.indexOf(self.tab_17), _translate("Form", "Normalisation des données"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Form", "Prétraitement des données"))
         self.tabWidget.currentChanged.connect(lambda: self.visualiser_dataset(self.tableView)) 
         self.tabWidget.currentChanged.connect(lambda: self.attributs(self.tableView_3))
         self.tabWidget_2.currentChanged.connect(lambda: self.attributs(self.tableView_3))
+        self.listView_3 = QtWidgets.QTableView(self.tab_17)
+        self.listView_3.setGeometry(QtCore.QRect(410, 230, 256, 192))
+        self.listView_3.setObjectName("listView_3")
+        self.listView_3.setMinimumSize(QtCore.QSize(600, 400))
+        self.listView_3.setMaximumSize(QtCore.QSize(600, 400))
+        
 
+        
         self.tabWidget.currentChanged.connect(lambda: self.tendances(self.tableView_5)) 
         self.tabWidget.currentChanged.connect(lambda: self.mesures(self.tableView_6))
 
@@ -976,6 +1210,9 @@ class Ui_Form(object):
         self.comboBox_8.activated.connect(lambda: self.plottingScatter(self.tab_13,self.verticalLayout_17,"Scatter", self.comboBox_7.currentText(),self.comboBox_8.currentText())) 
         self.comboBox_6.activated.connect(lambda: self.plottingHist(self.tab_10,self.verticalLayout_16,"Hist", self.comboBox_6.currentText()))
         self.comboBox_5.activated.connect(lambda: self.plottingMoustaches(self.tab_12,self.verticalLayout_13,"Moustaches", self.comboBox_5.currentText()))
+        self.comboBox_13.activated.connect(lambda: self.plotting_bins(self.tab_15,self.verticalLayout_13, self.comboBox_14.currentText(), self.comboBox_13.currentText()))
+        self.comboBox_15.activated.connect(lambda : self.features(self.comboBox_15))
+
 
         
 
@@ -1087,9 +1324,9 @@ class pandasModel(QAbstractTableModel):
                 value = np.nan
         if role == Qt.EditRole:
             # Set the value into the frame.
-            self._data.iloc[index.row(), index.column()] = value            
+            self._data.iloc[index.row(), index.column()] = float(value)        
             dffff = pd.read_excel("Dataset1_ HR-EmployeeAttrition.xlsx")
-            dffff.iloc[int(index.row()), int(index.column())] =value    
+            dffff.iloc[int(index.row()), int(index.column())] =float(value)    
             dffff.update(self._data)
             dffff.to_excel('Dataset1_ HR-EmployeeAttrition.xlsx', index =False)
             return True
@@ -1099,6 +1336,7 @@ class pandasModel(QAbstractTableModel):
 
 
 class Window(QWidget):
+    DFORIGINAL =pd.read_excel("Dataset1_ HR-EmployeeAttrition.xlsx")
     DF =pd.read_excel("Dataset1_ HR-EmployeeAttrition.xlsx")
 
     # constructor
@@ -1147,7 +1385,112 @@ class Window(QWidget):
             axe.set_title(combo)
         # refresh canvas
         self.canvas.draw()
+        
+    def EqualWidth(self, df7):
+        ats = ['Age', 'DailyRate', 'DistanceFromHome', 'EmployeeNumber', 'HourlyRate',
+           'MonthlyIncome', 'MonthlyRate', 'NumCompaniesWorked',
+           'PercentSalaryHike', 'TotalWorkingYears', 'TrainingTimesLastYear',
+           'WorkLifeBalance', 'YearsAtCompany', 'YearsInCurrentRole',
+           'YearsSinceLastPromotion', 'YearsWithCurrManager']
+        for d in ats:
+            maximum = df7[d].max()
+            minimum = df7[d].min()
+            rangrang= maximum - minimum 
+            k= 1+3*math.log10(len(df7[d]))
+            width = int(rangrang/k) 
+            min_value = int(np.floor(minimum))
+            max_value = int(np.ceil( maximum))
+            if(width==0):
+                width = 1
+            intervals = [i for i in range(min_value, max_value + width,width)]
+            df7[f'{d}_Bins'] = pd.cut(x=df7[d], bins=intervals,include_lowest=True)
+            t1 = df7[f'{d}_Bins'].value_counts() / len(df7)
+            
+    def EqualFreq(self, df,q):   
+        ats = ['Age', 'DailyRate', 'DistanceFromHome', 'EmployeeNumber', 'HourlyRate',
+           'MonthlyIncome', 'MonthlyRate', 'NumCompaniesWorked',
+           'PercentSalaryHike', 'TotalWorkingYears', 'TrainingTimesLastYear',
+           'WorkLifeBalance', 'YearsAtCompany', 'YearsInCurrentRole',
+           'YearsSinceLastPromotion', 'YearsWithCurrManager'] 
+        dffffffffff = pd.read_excel("org.xlsx")
+        all = []
+        for d in ats:
+            a = len(df[d])
+            n = int(a / q)
+            for i in range(0, q):
+                arr = []
+                for j in range(i * n, (i + 1) * n):
+                    if j >= a:
+                        break
+                    arr = arr + [df[d][j]]
+                all.extend(arr)
+            dffffffffff[d]= pd.Series(all)
 
+        return dffffffffff
+        
+    # action called by the push button
+    def Bin(self, combo1,combo2):
+
+        # clearing old figure
+        self.figure.clear()
+        df = self.DF
+        
+        
+        if combo1=="Effectifs égaux":
+            dff = self.EqualFreq(df,3)
+            axe = self.figure.add_subplot(121)
+            sns.countplot(x=self.DFORIGINAL[combo2], ax= axe)
+            axe.set_title("Before")
+            axe = self.figure.add_subplot(122)
+            sns.countplot(x=dff[combo2], ax= axe)
+            axe.set_title("After")  
+            
+            
+        elif combo1=="Amplitudes égales":
+            print('waaaaaaaa')
+            self.EqualWidth(df)
+            axe = self.figure.add_subplot(121)
+            sns.countplot(x=self.DFORIGINAL[combo2], ax= axe)
+            axe.set_title("Before")
+            axe = self.figure.add_subplot(122)
+            sns.countplot(x=df[f'{combo2}_Bins'], ax= axe)
+            axe.set_title("After")  
+        
+
+        
+      
+            
+        # refresh canvas
+        self.canvas.draw()
+
+    def draw_outliers(self, combo,dfbefore, dfafter):
+
+        # clearing old figure
+        self.figure.clear()
+        axe = self.figure.add_subplot(121)
+        axe.boxplot(dfbefore[combo])
+        axe.set_title("Before")
+        axe = self.figure.add_subplot(122)
+        axe.boxplot(dfafter[combo])
+        axe.set_title("After")
+        # refresh canvas
+        self.canvas.draw()
+        
+    def draw_valmanquantes(self, combo,dfbefore, dfafter):
+
+        # clearing old figure
+        self.figure.clear()
+        axe = self.figure.add_subplot(121)
+        sns.heatmap(np.asarray(dfbefore[combo].isnull()).reshape(-1,1),yticklabels=False,cbar=False,ax=axe,cmap=ListedColormap([ 'yellow', 'red']))
+        #axe.boxplot(dfbefore[combo])
+        axe.set_title("Before")
+        axe = self.figure.add_subplot(122)
+        sns.heatmap(np.asarray(dfafter[combo].isnull()).reshape(-1,1),yticklabels=False,cbar=False,ax=axe,cmap=ListedColormap(['yellow', 'red']))
+        #axe.boxplot(dfafter[combo])
+        axe.set_title("After")
+        # refresh canvas
+        self.canvas.draw()
+        
     def hist(self, combo):
 
         # clearing old figure
