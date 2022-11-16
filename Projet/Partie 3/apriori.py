@@ -126,7 +126,7 @@ def make_rules(items):
 
 # fonction qui retourne les régles ayant une confiance supperieur a la confiance minimum 
 # elle retourne aussi pour chaque regle sa confiance et son lift
-def association_correlation_rules(items, min_conf):
+def association_correlation_rules(data, items, min_conf):
     table = []
     rules = make_rules(items) # recupere les regles 
     min_c = min_conf * len(data.values()) # on calcule la confiance minimum
@@ -134,7 +134,7 @@ def association_correlation_rules(items, min_conf):
     # pour chaque regle on calcule sa confiance et on vérifie si elle est sup a la conf min
     for fr in rules:
         x, y = fr # on recupere les itemsets de la regle par exemple pour la regle {I1, I2} --> {I3, I4}
-                  # on obtient x = {I1, I2} et y = {I3, I4}
+                # on obtient x = {I1, I2} et y = {I3, I4}
 
         xy = sum(fr,[]) # transforme la regle de {I1, I2} --> {I3, I4} a {I1, I2, I3, I4}
 
@@ -169,7 +169,7 @@ def association_correlation_rules(items, min_conf):
 # Version final de l'algo regroupant toute les fonctions
 def algorithme_apriori(data,min_support,min_confidence):
     L = apriori(data,min_support)
-    return association_correlation_rules(L, min_confidence)
+    return association_correlation_rules(data, L, min_confidence)
 
 if __name__ == '__main__':
     df = pd.read_excel("Dataset2_ TrendingVideosYoutube_.xlsx")
