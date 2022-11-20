@@ -171,6 +171,17 @@ def algorithme_apriori(data,min_support,min_confidence):
     L = apriori(data,min_support)
     return association_correlation_rules(data, L, min_confidence)
 
+# Retourne les conséquents (Y) de toutes les règles avec un item particulier comme antécédant (X)
+def get_recommendation(item, rules):
+    recomendations = []
+    for r in rules :
+        rule = r[0].split(" ---> ")
+        X = rule[0]
+        Y = rule[1]
+        if X == item:
+            recomendations.append(Y)
+    return recomendations
+
 if __name__ == '__main__':
     df = pd.read_excel("Dataset2_ TrendingVideosYoutube_.xlsx")
 
@@ -180,3 +191,5 @@ if __name__ == '__main__':
 
     pd.set_option('display.max_colwidth', None)
     print(pd.DataFrame(rules, columns = ["Rule","Confidence","Lift"]))
+    
+    print(get_recommendation("{'Education'}", rules))
