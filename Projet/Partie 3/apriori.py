@@ -172,7 +172,7 @@ def algorithme_apriori(data,min_support,min_confidence):
     return association_correlation_rules(data, L, min_confidence)
 
 # Retourne les conséquents (Y) de toutes les règles avec un item particulier comme antécédant (X)
-def get_recommendation(item, rules):
+def get_recommendation(rules, item = "{'Education'}"):
     recomendations = []
     for r in rules :
         rule = r[0].split(" ---> ")
@@ -192,4 +192,4 @@ if __name__ == '__main__':
     pd.set_option('display.max_colwidth', None)
     print(pd.DataFrame(rules, columns = ["Rule","Confidence","Lift"]))
     
-    print(get_recommendation("{'Education'}", rules))
+    print(get_recommendation(rules,"{'Education'}",))

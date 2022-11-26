@@ -4,6 +4,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import apriori
 import pandas as pd
 import util
+from PyQt5.QtWidgets import QListWidgetItem
+
+support , confidence=0.2,0.2
+rules = []
 
 
 class Ui_Form(object):
@@ -50,6 +54,8 @@ class Ui_Form(object):
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
+        self.tabr = QtWidgets.QWidget()
+        self.tabr.setObjectName("tabr")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.tab)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -93,7 +99,37 @@ class Ui_Form(object):
         self.tableView.setMaximumWidth(800)
         self.verticalLayout.addWidget(self.tableView)
         self.horizontalLayout_2.addLayout(self.verticalLayout)
+        self.horizontalLayout_2r = QtWidgets.QHBoxLayout(self.tabr)
+        self.horizontalLayout_2r.setObjectName("horizontalLayout_2r")
+        self.verticalLayoutr = QtWidgets.QVBoxLayout()
+        self.verticalLayoutr.setObjectName("verticalLayoutr")
+        self.labelr = QtWidgets.QLabel(self.tabr)
+        self.labelr.setObjectName("labelr")
+        self.verticalLayoutr.addWidget(self.labelr)
+        self.horizontalLayout_3r = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3r.setObjectName("horizontalLayout_3r")
+        self.verticalLayout_2r = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2r.setObjectName("verticalLayout_2r")
+        self.comboBox = QtWidgets.QComboBox(self.tabr)
+        self.comboBox.setMinimumSize(QtCore.QSize(0, 30))
+        self.comboBox.setMaximumSize(QtCore.QSize(300, 40))
+        self.comboBox.setObjectName("comboBox")
+        self.verticalLayout_2r.addWidget(self.comboBox)
+        self.label_2r = QtWidgets.QLabel(self.tabr)
+        self.label_2r.setMinimumSize(QtCore.QSize(100, 0))
+        self.label_2r.setMaximumSize(QtCore.QSize(300, 16777215))
+        self.label_2r.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";")
+        self.label_2r.setObjectName("label_2r")
+        self.verticalLayout_2r.addWidget(self.label_2r)
+        self.listView = QtWidgets.QListView(self.tabr)
+        self.listView.setObjectName("listView")
+        self.comboBox.activated.connect( lambda: self.recommend(self.comboBox.currentText(), self.listView))
+        self.verticalLayout_2r.addWidget(self.listView)
+        self.horizontalLayout_3r.addLayout(self.verticalLayout_2r)
+        self.verticalLayoutr.addLayout(self.horizontalLayout_3r)
+        self.horizontalLayout_2r.addLayout(self.verticalLayoutr)
         self.tabWidget.addTab(self.tab, "")
+        self.tabWidget.addTab(self.tabr, "Recommendation")
         self.gridLayout_2.addWidget(self.tabWidget, 0, 0, 1, 1)
         self.gridLayout_3.addLayout(self.gridLayout_2, 0, 0, 1, 1)
         self.pushButton = QtWidgets.QPushButton("Apriori",self.tab)
@@ -119,17 +155,32 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "Partie 3 du TP DataMining"))
         self.label_3.setText(_translate("Form", "min_support"))
         self.label_2.setText(_translate("Form", "min_confidence"))
+        self.labelr.setText(_translate("Form", "Recommendation"))
+        self.label_2r.setText(_translate("Form", "Choisir Une catégorie"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "Manipulation de dataset"))
 
-    def tp(self, view, sup =0.2, conf=0.2):
+    def load_categories(self, combo):
+        combo.clear()
         df = pd.read_excel("Dataset2_ TrendingVideosYoutube_.xlsx")
+        categories = df['videoCategoryLabel'].unique()
+        combo.addItems(categories)
 
-        data = apriori.create_data_table(df)
+    def recommend(self, categorie, list):
+        global support, confidence, rules
+        categorie = "{'"+categorie+"'}"
+        recommendations = apriori.get_recommendation(rules, categorie)
+        dff=pd.DataFrame(recommendations, columns = ["Recommendations"])
+        model = util.pandasModel(dff)
+        list.setModel(model)
+        list.resize(500, 200)
+        list.show()
 
-        if sup==0 and conf==0:
-            rules = apriori.algorithme_apriori(data, 0.2, 0.2)
-        else: 
-            rules = apriori.algorithme_apriori(data, sup, conf)
+
+    def tp(self, view, sup, conf):
+        global rules
+        df = pd.read_excel("Dataset2_ TrendingVideosYoutube_.xlsx")
+        data = apriori.create_data_table(df)        
+        rules = apriori.algorithme_apriori(data, sup, conf)
 
         pd.set_option('display.max_colwidth', None)
         model = util.pandasModel(pd.DataFrame(rules, columns = ["Rule","Confidence","Lift"]))
@@ -143,6 +194,9 @@ if __name__ == "__main__":
     Form = QtWidgets.QWidget()
     ui = Ui_Form()
     ui.setupUi(Form)
+    ui.load_categories(ui.comboBox)
+    ui.tp(ui.tableView, support, confidence)
+    ui.recommend(ui.comboBox.currentText() , ui.listView)
     Form.show()
     sys.exit(app.exec_())
 
