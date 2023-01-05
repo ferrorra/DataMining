@@ -28,7 +28,6 @@ class Ui_Form(object):
         self.rf_time=0.000
         self.tt=0.000
         self.labels = ["Attrition", "No Attrition"]
-
         self.tabWidget.setStyleSheet("QTabWidget::pane {\n"
 "  border: 1px solid rgb(43, 93, 147);\n"
 "  top:-1px; \n"
